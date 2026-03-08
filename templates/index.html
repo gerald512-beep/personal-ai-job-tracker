@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+  <h1>Job Tracker <a href="/status" style="font-size:0.45em;font-weight:normal;margin-left:1em">System Status</a></h1>
+
+  <!-- Stats bar -->
+  <div class="stats-bar">
+    <span>Total: <strong>{{ stats.total }}</strong></span>
+    <span>Applied: <strong>{{ stats.applied }}</strong></span>
+    <span>Interviewing: <strong>{{ stats.interviewing }}</strong></span>
+    <span>New today: <strong>{{ stats.new_today }}</strong></span>
+    <span>Avg score: <strong>{{ stats.avg_score if stats.avg_score is not none else 'ND' }}</strong></span>
+  </div>
+
+  <!-- Filter form -->
+  <form class="filter-bar" method="GET" action="/">
+    <input name="search" placeholder="Search title or company" value="{{ search }}">
+    <select name="status">
+      <option value="">All (excl. Dismissed)</option>
+      {% for s in statuses %}
+      <option value="{{ s }}" {{ 'selected' if status == s }}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <select name="visa">
+      <option value="">ALL visa</option>
+      <option value="Sponsor" {{ 'selected' if visa == 'Sponsor' }}>Sponsor</option>
+      <option value="No" {{ 'selected' if visa == 'No' }}>No</option>
+      <option value="ND" {{ 'selected' if visa == 'ND' }}>ND</option>
+    </select>
+    <input name="score_min" type="number" min="0" max="100" placeholder="Min score" value="{{ score_min }}">
+    <button type="submit">Filter</button>
+    <a href="/">Clear</a>
+  </form>
+
+  <!-- Results count -->
+  <p class="result-count">Showing {{ jobs|length }} job{{ 's' if jobs|length != 1 }}</p>
+
+  <!-- Jobs table -->
+  <table>
+    <thead>
+      <tr>
+        <th><a href="?search={{ search }}&status={{ status }}&visa={{ visa }}&score_min={{ score_min }}&sort=title&dir={{ 'asc' if sort == 'title' and direction == 'desc' else 'desc' }}">Title{% if sort == 'title' %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>
+        <th><a href="?search={{ search }}&status={{ status }}&visa={{ visa }}&score_min={{ score_min }}&sort=company&dir={{ 'asc' if sort == 'company' and direction == 'desc' else 'desc' }}">Company{% if sort == 'company' %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>
+        <th><a href="?search={{ search }}&status={{ status }}&visa={{ visa }}&score_min={{ score_min }}&sort=match_score&dir={{ 'asc' if sort == 'match_score' and direction == 'desc' else 'desc' }}">Score{% if sort == 'match_score' %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>
+        <th>Visa</th>
+        <th>Salary</th>
+        <th>Sources</th>
+        <th><a href="?search={{ search }}&status={{ status }}&visa={{ visa }}&score_min={{ score_min }}&sort=posted_date&dir={{ 'asc' if sort == 'posted_date' and direction == 'desc' else 'desc' }}">Posted{% if sort == 'posted_date' %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>
+        <th>Status</th>
+        <th><a href="?search={{ search }}&status={{ status }}&visa={{ visa }}&score_min={{ score_min }}&sort=created_at&dir={{ 'asc' if sort == 'created_at' and direction == 'desc' else 'desc' }}">Added{% if sort == 'created_at' %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for job in jobs %}
+      <tr>
+        <td><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.title }}</a></td>
+        <td><a href="/jobs/{{ job.id }}">{{ job.company }}</a></td>
+        <td class="score score-{{ score_class(job.match_score) }}">
+          {{ job.match_score if job.match_score is not none else 'ND' }}
+        </td>
+        <td><span class="badge badge-{{ (job.visa_flag or 'nd')|lower }}">{{ job.visa_flag or 'ND' }}</span></td>
+        <td>{{ fmt_salary(job.salary_min, job.salary_max) }}</td>
+        <td>{{ (job.sources or '')|replace('|', ', ') }}</td>
+        <td>{{ (job.posted_date or '')[:10] }}</td>
+        <td>
+          <select hx-post="/jobs/{{ job.id }}/status"
+                  hx-trigger="change"
+                  hx-target="closest td"
+                  hx-swap="innerHTML"
+                  name="status">
+            {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if job.status == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </td>
+        <td>{{ (job.created_at or '')[:10] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ job.title }} — Job Tracker</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <p><a href="/">&larr; Back to dashboard</a></p>
+
+  <h1>{{ job.title }}</h1>
+
+  <table class="detail-table">
+    <tr>
+      <th>Company</th>
+      <td>{{ job.company }}</td>
+    </tr>
+    <tr>
+      <th>URL</th>
+      <td><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.url }}</a></td>
+    </tr>
+    <tr>
+      <th>Status</th>
+      <td>{{ job.status }}</td>
+    </tr>
+    <tr>
+      <th>Match Score</th>
+      <td class="score score-{{ score_class(job.match_score) }}">
+        {{ job.match_score if job.match_score is not none else 'ND' }}
+      </td>
+    </tr>
+    <tr>
+      <th>Match Reason</th>
+      <td class="match-reason">{{ job.match_reason or '—' }}</td>
+    </tr>
+    <tr>
+      <th>Visa</th>
+      <td><span class="badge badge-{{ (job.visa_flag or 'nd')|lower }}">{{ job.visa_flag or 'ND' }}</span></td>
+    </tr>
+    <tr>
+      <th>Salary</th>
+      <td>{{ fmt_salary(job.salary_min, job.salary_max) }}</td>
+    </tr>
+    <tr>
+      <th>Sources</th>
+      <td>{{ (job.sources or '')|replace('|', ', ') }}</td>
+    </tr>
+    <tr>
+      <th>Posted Date</th>
+      <td>{{ (job.posted_date or '')[:10] or '—' }}</td>
+    </tr>
+    <tr>
+      <th>Date Added</th>
+      <td>{{ (job.created_at or '')[:10] or '—' }}</td>
+    </tr>
+    <tr>
+      <th>Emailed</th>
+      <td>{{ 'Yes' if job.emailed else 'No' }}</td>
+    </tr>
+  </table>
+</body>
+</html>

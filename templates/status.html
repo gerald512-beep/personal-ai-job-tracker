@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Job Tracker — Status</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <meta http-equiv="refresh" content="30">
+</head>
+<body>
+  <h1>Job Tracker — Status <small style="font-size:0.5em;color:#888">(auto-refresh every 30s)</small></h1>
+  <p><a href="/">&larr; Back to jobs</a></p>
+
+  <!-- Scheduler task -->
+  <h2>Scheduler Task</h2>
+  <table style="width:auto">
+    <tr><th>Task status</th><td class="{{ 'ok' if 'Running' in task_status or 'Ready' in task_status else 'bad' }}">{{ task_status }}</td></tr>
+    {% if task_last_run %}<tr><th>Last run</th><td>{{ task_last_run }}</td></tr>{% endif %}
+  </table>
+
+  {% if task_status == 'Not registered' %}
+  <p style="color:#c00"><strong>The scheduler task is not registered.</strong>
+  Run <code>setup_task_scheduler.bat</code> as Administrator to register it.</p>
+  {% elif 'Running' not in task_status and 'Ready' not in task_status %}
+  <form method="POST" action="/status/start">
+    <button type="submit">Start scheduler now</button>
+  </form>
+  {% else %}
+  <form method="POST" action="/status/start">
+    <button type="submit">Restart scheduler</button>
+  </form>
+  {% endif %}
+
+  <!-- Recent runs -->
+  <h2>Recent Scrape Runs</h2>
+  {% if runs %}
+  <table>
+    <thead>
+      <tr><th>Started</th><th>Completed</th><th>Jobs found</th></tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td>{{ (r.started_at or '')[:19] }}</td>
+        <td>{{ (r.completed_at or '')[:19] }}</td>
+        <td>{{ r.jobs_found }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No runs recorded yet.</p>
+  {% endif %}
+
+  <!-- Log tail -->
+  <h2>Scheduler Log (last 60 lines)</h2>
+  {% if log_lines %}
+  <pre class="log-tail">{{ log_lines | join('\n') }}</pre>
+  {% else %}
+  <p>No log file found at scheduler.log</p>
+  {% endif %}
+</body>
+</html>

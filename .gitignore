@@ -1,0 +1,13 @@
+config.json
+*.db
+*.db-wal
+*.db-shm
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+resume.pdf
+resume.txt
+*.log
+.claude/
